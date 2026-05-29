@@ -3,11 +3,12 @@
 import { memo, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Plus, Inbox, CircleDot, Loader, CheckCircle2 } from 'lucide-react'
+import { Plus, Inbox, CircleDot, Loader, CheckCircle2, Clock } from 'lucide-react'
 import type { Task, Status } from '@/types'
 import { STATUS_LABELS } from '@/types'
 import { KanbanCard } from './kanban-card'
 import { Button } from '@/components/ui/button'
+import { formatMinutes, totalMinutes } from '@/lib/utils'
 
 interface KanbanColumnProps {
   status: Status
@@ -15,6 +16,7 @@ interface KanbanColumnProps {
   onEdit: (task: Task) => void
   onDelete: (id: string) => void
   onAdd: (status: Status) => void
+  compact?: boolean
 }
 
 const STATUS_ICONS: Record<Status, typeof Inbox> = {
@@ -24,17 +26,30 @@ const STATUS_ICONS: Record<Status, typeof Inbox> = {
   done: CheckCircle2,
 }
 
+const EMPTY_MESSAGES: Record<Status, string> = {
+  backlog: 'No tasks queued',
+  todo: 'Nothing to do yet',
+  in_progress: 'Nothing in progress',
+  done: 'No completed tasks',
+}
+
 export const KanbanColumn = memo(function KanbanColumn({
   status,
   tasks,
   onEdit,
   onDelete,
   onAdd,
+  compact,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const Icon = STATUS_ICONS[status]
 
   const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks])
+
+  const totalEstimate = useMemo(
+    () => formatMinutes(totalMinutes(tasks.map((t) => t.estimated_minutes))),
+    [tasks]
+  )
 
   return (
     <div className="flex h-full w-72 shrink-0 flex-col">
@@ -45,9 +60,17 @@ export const KanbanColumn = memo(function KanbanColumn({
             {STATUS_LABELS[status]}
           </h2>
         </div>
-        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/[0.06] px-1.5 text-[10px] font-medium text-zinc-500 tabular-nums">
-          {tasks.length}
-        </span>
+        <div className="flex items-center gap-2">
+          {tasks.length > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-zinc-600">
+              <Clock className="size-3" />
+              {totalEstimate}
+            </span>
+          )}
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/[0.06] px-1.5 text-[10px] font-medium text-zinc-500 tabular-nums">
+            {tasks.length}
+          </span>
+        </div>
       </div>
 
       <div
@@ -68,13 +91,14 @@ export const KanbanColumn = memo(function KanbanColumn({
               task={task}
               onEdit={onEdit}
               onDelete={onDelete}
+              compact={compact}
             />
           ))}
         </SortableContext>
 
         {tasks.length === 0 && (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-xs text-zinc-600">No tasks</p>
+            <p className="text-xs text-zinc-600">{EMPTY_MESSAGES[status]}</p>
           </div>
         )}
       </div>
@@ -94,6 +118,7 @@ export const KanbanColumn = memo(function KanbanColumn({
   )
 }, (prev, next) => {
   if (prev.status !== next.status) return false
+  if (prev.compact !== next.compact) return false
   if (prev.tasks.length !== next.tasks.length) return false
   return prev.tasks.every((t, i) => {
     const n = next.tasks[i]
