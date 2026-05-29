@@ -170,7 +170,7 @@ export function KanbanBoard() {
           onCompactToggle={() => setCompact((v) => !v)}
         />
 
-        <div className="flex-1 overflow-x-auto p-6 pt-4 scrollbar-thin">
+        <div className="flex-1 p-6 pt-4 scrollbar-thin">
           {!hasResults && search.trim() ? (
             <div className="flex h-full flex-col items-center justify-center gap-3">
               <Search className="size-8 text-zinc-600" />
@@ -189,7 +189,7 @@ export function KanbanBoard() {
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
             >
-              <div className="flex h-full gap-5">
+              <div className="grid h-full grid-cols-2 gap-5 2xl:grid-cols-4">
                 {columns.map(({ status, tasks: columnTasks }) => (
                   <KanbanColumn
                     key={status}

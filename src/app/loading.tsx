@@ -1,9 +1,12 @@
 export default function Loading() {
   return (
-    <div className="flex h-full items-center justify-center gap-6 p-6">
-      {['backlog', 'todo', 'in_progress', 'done'].map((_, i) => (
-        <div key={i} className="flex h-full w-72 shrink-0 flex-col gap-3">
-          <div className="h-4 w-20 animate-pulse rounded bg-white/[0.06]" />
+    <div className="grid h-full grid-cols-2 gap-5 p-6 2xl:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex h-full min-h-0 flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="size-4 animate-pulse rounded-full bg-white/[0.06]" />
+            <div className="h-3 w-16 animate-pulse rounded bg-white/[0.06]" />
+          </div>
           <div className="flex flex-1 flex-col gap-2 rounded-xl border border-white/[0.04] bg-white/[0.02] p-2">
             {[1, 2, 3].map((j) => (
               <div
