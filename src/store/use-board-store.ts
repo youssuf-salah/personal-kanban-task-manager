@@ -17,6 +17,15 @@ interface BoardState {
   bulkImport: (inputs: CreateTaskInput[]) => Promise<{ created: number; failed: number }>
 }
 
+async function getErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await res.json()
+    return body.error || body.details?.[0]?.message || `Request failed (${res.status})`
+  } catch {
+    return `Request failed (${res.status})`
+  }
+}
+
 export const useBoardStore = create<BoardState>((set, get) => ({
   tasks: [],
   isLoading: false,
@@ -26,12 +35,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await fetch('/api/tasks')
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) throw new Error(await getErrorMessage(res))
       const tasks = await res.json()
       set({ tasks, isLoading: false })
     } catch (err) {
-      set({ error: (err as Error).message, isLoading: false })
-      toast.error('Failed to load tasks')
+      const msg = (err as Error).message
+      set({ error: msg, isLoading: false })
+      toast.error(msg)
     }
   },
 
@@ -41,7 +51,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     })
-    if (!res.ok) throw new Error('Failed to create')
+    if (!res.ok) throw new Error(await getErrorMessage(res))
     const task = await res.json()
     set((state) => ({ tasks: [...state.tasks, task] }))
     toast.success('Task created')
@@ -53,7 +63,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     })
-    if (!res.ok) throw new Error('Failed to update')
+    if (!res.ok) throw new Error(await getErrorMessage(res))
     const updated = await res.json()
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
@@ -64,7 +74,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   deleteTask: async (id) => {
     const task = get().tasks.find((t) => t.id === id)
     const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-    if (!res.ok) throw new Error('Failed to delete')
+    if (!res.ok) throw new Error(await getErrorMessage(res))
     set((state) => ({
       tasks: state.tasks.filter((t) => t.id !== id),
     }))
@@ -95,7 +105,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           t.id === id ? { ...t, status: oldStatus } : t
         ),
       }))
-      toast.error('Failed to move task')
+      const msg = await getErrorMessage(res)
+      toast.error(msg)
     }
   },
 
@@ -105,7 +116,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inputs),
     })
-    if (!res.ok) throw new Error('Failed to bulk import')
+    if (!res.ok) throw new Error(await getErrorMessage(res))
     const result = await res.json()
     set((state) => ({
       tasks: [...state.tasks, ...result.tasks],
