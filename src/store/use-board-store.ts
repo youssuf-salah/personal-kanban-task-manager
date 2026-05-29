@@ -46,7 +46,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   updateTask: async (id, input) => {
     const res = await fetch(`/api/tasks/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     })
@@ -78,7 +78,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }))
 
     const res = await fetch(`/api/tasks/${id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
@@ -93,13 +93,19 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   bulkImport: async (inputs) => {
-    const res = await fetch('/api/tasks', {
+    const res = await fetch('/api/tasks/bulk-import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(inputs),
     })
     if (!res.ok) throw new Error('Failed to bulk import')
-    const tasks = await res.json()
-    set({ tasks })
+    const result = await res.json()
+    set((state) => ({
+      tasks: [...state.tasks, ...result.tasks],
+      error: result.failed > 0 ? `${result.failed} task(s) failed validation` : null,
+    }))
+    if (result.failed > 0) {
+      throw new Error(`Bulk import completed with ${result.failed} error(s)`)
+    }
   },
 }))
