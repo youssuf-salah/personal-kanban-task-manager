@@ -36,6 +36,16 @@ export interface ImportTaskInput {
   estimated_minutes?: number
 }
 
+export interface BulkImportResult {
+  created: number
+  failed: number
+  errors: Array<{
+    index: number
+    issues: Array<{ message: string; path: (string | number)[]; code: string }>
+  }>
+  tasks: Task[]
+}
+
 export const STATUS_LABELS: Record<Status, string> = {
   backlog: 'Backlog',
   todo: 'Todo',
