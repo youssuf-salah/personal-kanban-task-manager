@@ -26,11 +26,58 @@ const STATUS_ICONS: Record<Status, typeof Inbox> = {
   done: CheckCircle2,
 }
 
-const EMPTY_MESSAGES: Record<Status, string> = {
-  backlog: 'No tasks queued',
-  todo: 'Nothing to do yet',
-  in_progress: 'Nothing in progress',
-  done: 'No completed tasks',
+const COLUMN_THEME: Record<Status, {
+  icon: string
+  title: string
+  count: string
+  accentVar: string
+  borderOver: string
+  bgOver: string
+  glowOver: string
+}> = {
+  backlog: {
+    icon: 'text-zinc-400',
+    title: 'text-zinc-300',
+    count: 'bg-zinc-500/20 text-zinc-400',
+    accentVar: '--column-accent: rgb(161 161 170)',
+    borderOver: 'border-zinc-500/30',
+    bgOver: 'bg-zinc-500/[0.04]',
+    glowOver: 'shadow-[0_0_24px_-8px_rgba(161,161,170,0.15)]',
+  },
+  todo: {
+    icon: 'text-blue-400',
+    title: 'text-blue-300',
+    count: 'bg-blue-500/20 text-blue-400',
+    accentVar: '--column-accent: rgb(96 165 250)',
+    borderOver: 'border-blue-500/30',
+    bgOver: 'bg-blue-500/[0.04]',
+    glowOver: 'shadow-[0_0_24px_-8px_rgba(96,165,250,0.15)]',
+  },
+  in_progress: {
+    icon: 'text-amber-400',
+    title: 'text-amber-300',
+    count: 'bg-amber-500/20 text-amber-400',
+    accentVar: '--column-accent: rgb(251 191 36)',
+    borderOver: 'border-amber-500/30',
+    bgOver: 'bg-amber-500/[0.04]',
+    glowOver: 'shadow-[0_0_24px_-8px_rgba(251,191,36,0.15)]',
+  },
+  done: {
+    icon: 'text-emerald-400',
+    title: 'text-emerald-300',
+    count: 'bg-emerald-500/20 text-emerald-400',
+    accentVar: '--column-accent: rgb(52 211 153)',
+    borderOver: 'border-emerald-500/30',
+    bgOver: 'bg-emerald-500/[0.04]',
+    glowOver: 'shadow-[0_0_24px_-8px_rgba(52,211,153,0.15)]',
+  },
+}
+
+const EMPTY_ICONS: Record<Status, typeof Inbox> = {
+  backlog: Inbox,
+  todo: CircleDot,
+  in_progress: Loader,
+  done: CheckCircle2,
 }
 
 export const KanbanColumn = memo(function KanbanColumn({
@@ -43,6 +90,8 @@ export const KanbanColumn = memo(function KanbanColumn({
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const Icon = STATUS_ICONS[status]
+  const theme = COLUMN_THEME[status]
+  const EmptyIcon = EMPTY_ICONS[status]
 
   const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks])
 
@@ -52,22 +101,22 @@ export const KanbanColumn = memo(function KanbanColumn({
   )
 
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col">
-      <div className="mb-3 flex items-center justify-between px-1">
+    <div className="flex h-full min-h-0 flex-col" style={{ [theme.accentVar.split(':')[0] as string]: theme.accentVar.split(':')[1] } as React.CSSProperties}>
+      <div className="mb-3 flex items-center justify-between px-0.5">
         <div className="flex items-center gap-2">
-          <Icon className="size-3.5 text-zinc-500" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <Icon className={`size-4 ${theme.icon}`} />
+          <h2 className={`text-xs font-semibold uppercase tracking-wider ${theme.title}`}>
             {STATUS_LABELS[status]}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           {tasks.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] text-zinc-600">
+            <span className="inline-flex items-center gap-1 text-[11px] text-zinc-500">
               <Clock className="size-3" />
               {totalEstimate}
             </span>
           )}
-          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/[0.06] px-1.5 text-[10px] font-medium text-zinc-500 tabular-nums">
+          <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-medium tabular-nums ${theme.count}`}>
             {tasks.length}
           </span>
         </div>
@@ -75,9 +124,10 @@ export const KanbanColumn = memo(function KanbanColumn({
 
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-2 overflow-y-auto rounded-xl border p-2 transition-all scrollbar-thin ${
+        style={{ '--column-accent': `var(--column-accent)` } as React.CSSProperties}
+        className={`column-accent flex flex-1 flex-col gap-2 overflow-y-auto rounded-xl border p-2 transition-all scrollbar-thin ${
           isOver
-            ? 'border-blue-500/40 bg-blue-500/[0.04] shadow-[0_0_24px_-8px_rgba(59,130,246,0.15)]'
+            ? `${theme.borderOver} ${theme.bgOver} ${theme.glowOver}`
             : 'border-white/[0.04] bg-white/[0.02]'
         }`}
       >
@@ -97,8 +147,9 @@ export const KanbanColumn = memo(function KanbanColumn({
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-xs text-zinc-600">{EMPTY_MESSAGES[status]}</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4">
+            <EmptyIcon className={`size-5 ${theme.icon} opacity-40`} />
+            <p className="text-xs text-zinc-500">No tasks</p>
           </div>
         )}
       </div>
