@@ -5,11 +5,14 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
+  type DragCancelEvent,
 } from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { useBoardStore } from '@/store/use-board-store'
 import type { Task, Status } from '@/types'
@@ -37,6 +40,9 @@ export function KanbanBoard() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   )
 
@@ -80,6 +86,13 @@ export function KanbanBoard() {
       }
     },
     [tasks, moveTask, setActiveDragId]
+  )
+
+  const handleDragCancel = useCallback(
+    (_event: DragCancelEvent) => {
+      setActiveDragId(null)
+    },
+    [setActiveDragId]
   )
 
   const handleDelete = useCallback(
@@ -141,6 +154,7 @@ export function KanbanBoard() {
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
             <div className="flex h-full gap-5">
               {columns.map(({ status, tasks: columnTasks }) => (
@@ -155,9 +169,13 @@ export function KanbanBoard() {
               ))}
             </div>
 
-            <DragOverlay modifiers={[restrictToWindowEdges]}>
+            <DragOverlay
+              dropAnimation={null}
+              modifiers={[restrictToWindowEdges]}
+              className="z-50"
+            >
               {activeTask ? (
-                <div className="w-72 rotate-3 opacity-90">
+                <div className="w-72 scale-105 shadow-2xl">
                   <KanbanCard
                     task={activeTask}
                     onEdit={() => {}}
