@@ -60,7 +60,7 @@ export const KanbanCard = memo(function KanbanCard({
           className={`touch-none transition-colors ${
             compact ? 'mt-0' : 'mt-0.5'
           } ${
-            isDragging ? 'cursor-grabbing text-zinc-500' : 'cursor-grab text-zinc-600 hover:text-zinc-400'
+            isDragging ? 'cursor-grabbing text-zinc-500' : 'cursor-grab text-zinc-500 hover:text-zinc-300'
           }`}
           {...attributes}
           {...listeners}
@@ -79,7 +79,7 @@ export const KanbanCard = memo(function KanbanCard({
             <span className={`inline-flex h-4 items-center rounded border px-1 text-[9px] font-medium uppercase leading-none ${DIFFICULTY_COLORS[task.difficulty]}`}>
               {task.difficulty[0]}
             </span>
-            <span className="inline-flex items-center gap-0.5 text-[9px] text-zinc-600">
+            <span className="inline-flex items-center gap-0.5 text-[9px] text-zinc-500">
               {task.estimated_minutes}m
             </span>
           </div>
