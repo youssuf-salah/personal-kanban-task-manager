@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 import {
   Dialog,
@@ -46,28 +46,11 @@ export function TaskDialog({
   onSubmit,
   task,
 }: TaskDialogProps) {
-  const [taskTitle, setTaskTitle] = useState('')
-  const [priority, setPriority] = useState<Priority>('medium')
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium')
-  const [estimatedMinutes, setEstimatedMinutes] = useState(30)
+  const [taskTitle, setTaskTitle] = useState(task?.task ?? '')
+  const [priority, setPriority] = useState<Priority>(task?.priority ?? 'medium')
+  const [difficulty, setDifficulty] = useState<Difficulty>(task?.difficulty ?? 'medium')
+  const [estimatedMinutes, setEstimatedMinutes] = useState(task?.estimated_minutes ?? 30)
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (open) {
-      if (task) {
-        setTaskTitle(task.task)
-        setPriority(task.priority)
-        setDifficulty(task.difficulty)
-        setEstimatedMinutes(task.estimated_minutes)
-      } else {
-        setTaskTitle('')
-        setPriority('medium')
-        setDifficulty('medium')
-        setEstimatedMinutes(30)
-      }
-      setErrors({})
-    }
-  }, [open, task])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,7 +74,10 @@ export function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-[425px]">
+      <DialogContent
+        key={task?.id ?? 'new'}
+        className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-[425px]"
+      >
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
         </DialogHeader>

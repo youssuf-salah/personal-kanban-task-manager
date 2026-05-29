@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -46,16 +46,6 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
   const [parseError, setParseError] = useState<string | null>(null)
   const [results, setResults] = useState<ParseResult[] | null>(null)
   const [importing, setImporting] = useState(false)
-
-  useEffect(() => {
-    if (open) {
-      setStep('paste')
-      setJsonInput('')
-      setParseError(null)
-      setResults(null)
-      setImporting(false)
-    }
-  }, [open])
 
   const handleParse = useCallback(() => {
     setParseError(null)
@@ -155,6 +145,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        key={String(open)}
         className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-2xl"
         onKeyDown={handleKeyDown}
       >
