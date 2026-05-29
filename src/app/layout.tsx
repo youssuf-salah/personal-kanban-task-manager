@@ -28,8 +28,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
-      <body className="h-full bg-zinc-950 text-zinc-100">{children}</body>
-      <Toaster />
+      <body className="h-full bg-zinc-950 text-zinc-100">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }
