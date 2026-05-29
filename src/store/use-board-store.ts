@@ -104,8 +104,6 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       tasks: [...state.tasks, ...result.tasks],
       error: result.failed > 0 ? `${result.failed} task(s) failed validation` : null,
     }))
-    if (result.failed > 0) {
-      throw new Error(`Bulk import completed with ${result.failed} error(s)`)
-    }
+    return result
   },
 }))
