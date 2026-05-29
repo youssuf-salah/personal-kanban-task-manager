@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, Inbox, CircleDot, Loader, CheckCircle2 } from 'lucide-react'
@@ -23,7 +24,7 @@ const STATUS_ICONS: Record<Status, typeof Inbox> = {
   done: CheckCircle2,
 }
 
-export function KanbanColumn({
+export const KanbanColumn = memo(function KanbanColumn({
   status,
   tasks,
   onEdit,
@@ -89,4 +90,8 @@ export function KanbanColumn({
       )}
     </div>
   )
-}
+}, (prev, next) => {
+  if (prev.status !== next.status) return false
+  if (prev.tasks.length !== next.tasks.length) return false
+  return prev.tasks.every((t, i) => t.id === next.tasks[i].id)
+})
