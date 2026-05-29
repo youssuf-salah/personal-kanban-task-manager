@@ -209,9 +209,6 @@ export function KanbanBoard() {
       <BulkImportDialog
         open={bulkOpen}
         onOpenChange={setBulkOpen}
-        onImport={(tasks) => {
-          useBoardStore.getState().bulkImport(tasks)
-        }}
       />
     </>
   )
