@@ -1,4 +1,6 @@
-let prisma: any = null
+import type { PrismaClient } from "@/generated/prisma/client"
+
+let prisma: PrismaClient | null = null
 
 export async function getPrisma() {
   if (prisma) return prisma
@@ -9,7 +11,7 @@ export async function getPrisma() {
   }
 
   const { PrismaMariaDb } = await import("@prisma/adapter-mariadb")
-  const { PrismaClient } = await import("@/generated/prisma/client")
+  const { PrismaClient: PC } = await import("@/generated/prisma/client")
 
   const u = new URL(url)
   const adapter = new PrismaMariaDb({
@@ -21,6 +23,6 @@ export async function getPrisma() {
     connectionLimit: 5,
   })
 
-  prisma = new PrismaClient({ adapter })
+  prisma = new PC({ adapter })
   return prisma
 }

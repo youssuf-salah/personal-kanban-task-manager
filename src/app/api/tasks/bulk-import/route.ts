@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const tasks = valid.length > 0 ? await bulkCreateTasks(valid) : []
 
     return Response.json({ created: tasks.length, failed: errors.length, errors, tasks })
-  } catch (error) {
+  } catch {
     return Response.json({ error: 'Failed to process bulk import' }, { status: 500 })
   }
 }

@@ -34,7 +34,7 @@ export async function DELETE(
       return Response.json({ error: 'Task not found' }, { status: 404 })
     }
     return Response.json({ success: true })
-  } catch (error) {
+  } catch {
     return Response.json({ error: 'Failed to delete task' }, { status: 500 })
   }
 }

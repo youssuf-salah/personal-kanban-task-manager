@@ -1,10 +1,19 @@
 import { getPrisma } from "./prisma"
 import type { Task, CreateTaskInput, UpdateTaskInput, Status } from "@/types"
+import { Priority as PrismaPriority, Difficulty as PrismaDifficulty, Status as PrismaStatus } from "@/generated/prisma/enums"
 
 export { createTaskSchema, updateTaskSchema } from "./schemas"
 
-function toPrismaEnum(value: string) {
-  return value.toUpperCase().replace(/-/g, "_")
+function toPrismaPriority(value: string): typeof PrismaPriority[keyof typeof PrismaPriority] {
+  return value.toUpperCase().replace(/-/g, "_") as typeof PrismaPriority[keyof typeof PrismaPriority]
+}
+
+function toPrismaDifficulty(value: string): typeof PrismaDifficulty[keyof typeof PrismaDifficulty] {
+  return value.toUpperCase().replace(/-/g, "_") as typeof PrismaDifficulty[keyof typeof PrismaDifficulty]
+}
+
+function toPrismaStatus(value: string): typeof PrismaStatus[keyof typeof PrismaStatus] {
+  return value.toUpperCase().replace(/-/g, "_") as typeof PrismaStatus[keyof typeof PrismaStatus]
 }
 
 function toTask(row: Record<string, unknown>): Task {
@@ -33,10 +42,10 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
   const row = await prisma.task.create({
     data: {
       task: input.task,
-      priority: toPrismaEnum(input.priority ?? "medium"),
-      difficulty: toPrismaEnum(input.difficulty ?? "medium"),
+      priority: toPrismaPriority(input.priority ?? "medium"),
+      difficulty: toPrismaDifficulty(input.difficulty ?? "medium"),
       estimatedMinutes: input.estimated_minutes ?? 30,
-      status: input.status ? toPrismaEnum(input.status) : "BACKLOG",
+      status: input.status ? toPrismaStatus(input.status) : PrismaStatus.BACKLOG,
     },
   })
   return toTask(row)
@@ -49,10 +58,10 @@ export async function bulkCreateTasks(inputs: CreateTaskInput[]): Promise<Task[]
       prisma.task.create({
         data: {
           task: item.task,
-          priority: toPrismaEnum(item.priority ?? "medium"),
-          difficulty: toPrismaEnum(item.difficulty ?? "medium"),
+          priority: toPrismaPriority(item.priority ?? "medium"),
+          difficulty: toPrismaDifficulty(item.difficulty ?? "medium"),
           estimatedMinutes: item.estimated_minutes ?? 30,
-          status: item.status ? toPrismaEnum(item.status) : "BACKLOG",
+          status: item.status ? toPrismaStatus(item.status) : PrismaStatus.BACKLOG,
         },
       })
     )
@@ -64,10 +73,10 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Ta
   const prisma = await getPrisma()
   const data: Record<string, unknown> = {}
   if (input.task !== undefined) data.task = input.task
-  if (input.priority !== undefined) data.priority = toPrismaEnum(input.priority)
-  if (input.difficulty !== undefined) data.difficulty = toPrismaEnum(input.difficulty)
+  if (input.priority !== undefined) data.priority = toPrismaPriority(input.priority)
+  if (input.difficulty !== undefined) data.difficulty = toPrismaDifficulty(input.difficulty)
   if (input.estimated_minutes !== undefined) data.estimatedMinutes = input.estimated_minutes
-  if (input.status !== undefined) data.status = toPrismaEnum(input.status)
+  if (input.status !== undefined) data.status = toPrismaStatus(input.status)
 
   try {
     const row = await prisma.task.update({ where: { id }, data })
