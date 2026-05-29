@@ -29,12 +29,15 @@ enum Status {
 
 model Task {
   id               String     @id @default(cuid())
-  title            String
+  task             String
   priority         Priority   @default(MEDIUM)
   difficulty       Difficulty @default(MEDIUM)
-  estimatedMinutes Int        @default(30)
+  estimatedMinutes Int        @default(30) @map("estimated_minutes")
   status           Status     @default(BACKLOG)
-  position         Float
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([priority])
+  @@index([status, priority])
 }
