@@ -10,18 +10,19 @@ import {
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
-  type DragCancelEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { useBoardStore } from '@/store/use-board-store'
-import type { Task, Status } from '@/types'
+import type { Task, Status, Priority, Difficulty } from '@/types'
 import { COLUMNS } from '@/types'
 import { KanbanColumn } from './kanban-column'
 import { KanbanCard } from './kanban-card'
 import { KanbanNavbar } from './kanban-navbar'
 import { TaskDialog } from './task-dialog'
 import { BulkImportDialog } from './bulk-import-dialog'
+import { Search } from 'lucide-react'
+import { sortByPriority, filterTasks } from '@/lib/utils'
 
 export function KanbanBoard() {
   const tasks = useBoardStore((s) => s.tasks)
@@ -33,10 +34,12 @@ export function KanbanBoard() {
   const moveTask = useBoardStore((s) => s.moveTask)
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
-
   const [editTask, setEditTask] = useState<Task | null>(null)
   const [createStatus, setCreateStatus] = useState<Status | null>(null)
   const [bulkOpen, setBulkOpen] = useState(false)
+
+  const [search, setSearch] = useState('')
+  const [compact, setCompact] = useState(false)
 
   useEffect(() => {
     fetchTasks()
@@ -51,13 +54,20 @@ export function KanbanBoard() {
     })
   )
 
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, search),
+    [tasks, search]
+  )
+
   const columns = useMemo(
     () =>
       COLUMNS.map((status) => ({
         status,
-        tasks: tasks.filter((t) => t.status === status),
+        tasks: sortByPriority(
+          filteredTasks.filter((t) => t.status === status)
+        ),
       })),
-    [tasks]
+    [filteredTasks]
   )
 
   const activeTask = useMemo(
@@ -94,7 +104,7 @@ export function KanbanBoard() {
   )
 
   const handleDragCancel = useCallback(
-    (_event: DragCancelEvent) => {
+    () => {
       setActiveDragId(null)
     },
     [setActiveDragId]
@@ -111,8 +121,8 @@ export function KanbanBoard() {
     async (data: { task: string; priority: string; difficulty: string; estimated_minutes: number }) => {
       await createTask({
         task: data.task,
-        priority: data.priority as any,
-        difficulty: data.difficulty as any,
+        priority: data.priority as Priority,
+        difficulty: data.difficulty as Difficulty,
         estimated_minutes: data.estimated_minutes,
         status: createStatus ?? undefined,
       })
@@ -126,8 +136,8 @@ export function KanbanBoard() {
       if (!editTask) return
       await updateTask(editTask.id, {
         task: data.task,
-        priority: data.priority as any,
-        difficulty: data.difficulty as any,
+        priority: data.priority as Priority,
+        difficulty: data.difficulty as Difficulty,
         estimated_minutes: data.estimated_minutes,
       })
       setEditTask(null)
@@ -146,50 +156,70 @@ export function KanbanBoard() {
     )
   }
 
+  const hasResults = columns.some((c) => c.tasks.length > 0)
+
   return (
     <>
       <div className="flex h-full flex-col">
         <KanbanNavbar
           onNewTask={() => setCreateStatus('backlog')}
           onImport={() => setBulkOpen(true)}
+          search={search}
+          onSearchChange={setSearch}
+          compact={compact}
+          onCompactToggle={() => setCompact((v) => !v)}
         />
 
         <div className="flex-1 overflow-x-auto p-6 pt-4 scrollbar-thin">
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <div className="flex h-full gap-5">
-              {columns.map(({ status, tasks: columnTasks }) => (
-                <KanbanColumn
-                  key={status}
-                  status={status}
-                  tasks={columnTasks}
-                  onEdit={setEditTask}
-                  onDelete={handleDelete}
-                  onAdd={setCreateStatus}
-                />
-              ))}
+          {!hasResults && search.trim() ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3">
+              <Search className="size-8 text-zinc-600" />
+              <p className="text-sm text-zinc-500">No tasks match &quot;{search}&quot;</p>
+              <button
+                onClick={() => setSearch('')}
+                className="text-xs text-zinc-600 underline underline-offset-2 hover:text-zinc-400"
+              >
+                Clear search
+              </button>
             </div>
-
-            <DragOverlay
-              dropAnimation={null}
-              modifiers={[restrictToWindowEdges]}
-              className="z-50"
+          ) : (
+            <DndContext
+              sensors={sensors}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
             >
-              {activeTask ? (
-                <div className="w-72 scale-105 shadow-2xl">
-                  <KanbanCard
-                    task={activeTask}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
+              <div className="flex h-full gap-5">
+                {columns.map(({ status, tasks: columnTasks }) => (
+                  <KanbanColumn
+                    key={status}
+                    status={status}
+                    tasks={columnTasks}
+                    onEdit={setEditTask}
+                    onDelete={handleDelete}
+                    onAdd={setCreateStatus}
+                    compact={compact}
                   />
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
+                ))}
+              </div>
+
+              <DragOverlay
+                dropAnimation={null}
+                modifiers={[restrictToWindowEdges]}
+                className="z-50"
+              >
+                {activeTask ? (
+                  <div className="w-72 scale-105 shadow-2xl">
+                    <KanbanCard
+                      task={activeTask}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          )}
         </div>
       </div>
 
