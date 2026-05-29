@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, Inbox, CircleDot, Loader, CheckCircle2 } from 'lucide-react'
@@ -34,6 +34,8 @@ export const KanbanColumn = memo(function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const Icon = STATUS_ICONS[status]
 
+  const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks])
+
   return (
     <div className="flex h-full w-72 shrink-0 flex-col">
       <div className="mb-3 flex items-center justify-between px-1">
@@ -57,7 +59,7 @@ export const KanbanColumn = memo(function KanbanColumn({
         }`}
       >
         <SortableContext
-          items={tasks.map((t) => t.id)}
+          items={itemIds}
           strategy={verticalListSortingStrategy}
         >
           {tasks.map((task) => (
@@ -93,5 +95,9 @@ export const KanbanColumn = memo(function KanbanColumn({
 }, (prev, next) => {
   if (prev.status !== next.status) return false
   if (prev.tasks.length !== next.tasks.length) return false
-  return prev.tasks.every((t, i) => t.id === next.tasks[i].id)
+  return prev.tasks.every((t, i) => {
+    const n = next.tasks[i]
+    return t.id === n.id && t.task === n.task && t.priority === n.priority &&
+      t.difficulty === n.difficulty && t.estimated_minutes === n.estimated_minutes
+  })
 })
