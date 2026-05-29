@@ -7,24 +7,19 @@ interface BoardState {
   tasks: Task[]
   isLoading: boolean
   error: string | null
-  activeDragId: string | null
 
   fetchTasks: () => Promise<void>
   createTask: (input: CreateTaskInput) => Promise<void>
   updateTask: (id: string, input: UpdateTaskInput) => Promise<void>
   deleteTask: (id: string) => Promise<void>
-  moveTask: (id: string, status: Status, position: number) => Promise<void>
+  moveTask: (id: string, status: Status) => Promise<void>
   bulkImport: (inputs: CreateTaskInput[]) => Promise<void>
-  setActiveDragId: (id: string | null) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
   tasks: [],
   isLoading: false,
   error: null,
-  activeDragId: null,
-
-  setActiveDragId: (id) => set({ activeDragId: id }),
 
   fetchTasks: async () => {
     set({ isLoading: true, error: null })
@@ -70,7 +65,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }))
   },
 
-  moveTask: async (id, status, position) => {
+  moveTask: async (id, status) => {
     const { tasks } = get()
     const task = tasks.find((t) => t.id === id)
     if (!task) return
@@ -78,20 +73,20 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     const oldStatus = task.status
     set((state) => ({
       tasks: state.tasks.map((t) =>
-        t.id === id ? { ...t, status, position } : t
+        t.id === id ? { ...t, status } : t
       ),
     }))
 
     const res = await fetch(`/api/tasks/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, position }),
+      body: JSON.stringify({ status }),
     })
 
     if (!res.ok) {
       set((state) => ({
         tasks: state.tasks.map((t) =>
-          t.id === id ? { ...t, status: oldStatus, position: task.position } : t
+          t.id === id ? { ...t, status: oldStatus } : t
         ),
       }))
     }
