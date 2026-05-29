@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { updateTask, deleteTask, updateTaskSchema } from '@/lib/db'
 import { z } from 'zod'
 
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
