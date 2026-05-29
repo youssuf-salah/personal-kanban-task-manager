@@ -20,21 +20,21 @@ import {
 } from '@/components/ui/select'
 import type { Task, Status, Priority, Difficulty } from '@/types'
 
-const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
+const taskFormSchema = z.object({
+  task: z.string().min(1, 'Task is required').max(500),
   priority: z.enum(['critical', 'high', 'medium', 'low']),
   difficulty: z.enum(['hard', 'medium', 'easy']),
-  estimatedMinutes: z.coerce.number().int().min(1).max(1440),
+  estimated_minutes: z.coerce.number().int().min(1).max(1440),
 })
 
 interface TaskDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: {
-    title: string
+    task: string
     priority: string
     difficulty: string
-    estimatedMinutes: number
+    estimated_minutes: number
   }) => void
   task?: Task
   defaultStatus?: Status
@@ -46,7 +46,7 @@ export function TaskDialog({
   onSubmit,
   task,
 }: TaskDialogProps) {
-  const [title, setTitle] = useState('')
+  const [taskTitle, setTaskTitle] = useState('')
   const [priority, setPriority] = useState<Priority>('medium')
   const [difficulty, setDifficulty] = useState<Difficulty>('medium')
   const [estimatedMinutes, setEstimatedMinutes] = useState(30)
@@ -55,12 +55,12 @@ export function TaskDialog({
   useEffect(() => {
     if (open) {
       if (task) {
-        setTitle(task.title)
+        setTaskTitle(task.task)
         setPriority(task.priority)
         setDifficulty(task.difficulty)
-        setEstimatedMinutes(task.estimatedMinutes)
+        setEstimatedMinutes(task.estimated_minutes)
       } else {
-        setTitle('')
+        setTaskTitle('')
         setPriority('medium')
         setDifficulty('medium')
         setEstimatedMinutes(30)
@@ -71,7 +71,12 @@ export function TaskDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const result = taskSchema.safeParse({ title, priority, difficulty, estimatedMinutes })
+    const result = taskFormSchema.safeParse({
+      task: taskTitle,
+      priority,
+      difficulty,
+      estimated_minutes: estimatedMinutes,
+    })
     if (!result.success) {
       const fieldErrors: Record<string, string> = {}
       for (const issue of result.error.issues) {
@@ -92,16 +97,16 @@ export function TaskDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="task">Task</Label>
             <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              id="task"
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
               placeholder="What needs to be done?"
               autoFocus
             />
-            {errors.title && (
-              <p className="text-xs text-red-400">{errors.title}</p>
+            {errors.task && (
+              <p className="text-xs text-red-400">{errors.task}</p>
             )}
           </div>
 
@@ -152,9 +157,9 @@ export function TaskDialog({
               value={estimatedMinutes}
               onChange={(e) => setEstimatedMinutes(Number(e.target.value))}
             />
-            {errors.estimatedMinutes && (
+            {errors.estimated_minutes && (
               <p className="text-xs text-red-400">
-                {errors.estimatedMinutes}
+                {errors.estimated_minutes}
               </p>
             )}
           </div>

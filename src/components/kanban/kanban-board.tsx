@@ -22,17 +22,10 @@ import { BulkImportDialog } from './bulk-import-dialog'
 import { Button } from '@/components/ui/button'
 
 export function KanbanBoard() {
-  const {
-    tasks,
-    isLoading,
-    fetchTasks,
-    createTask,
-    updateTask,
-    deleteTask,
-    moveTask,
-    activeDragId,
-    setActiveDragId,
-  } = useBoardStore()
+  const { tasks, isLoading, fetchTasks, createTask, updateTask, deleteTask, moveTask } =
+    useBoardStore()
+
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
   const [editTask, setEditTask] = useState<Task | null>(null)
   const [createStatus, setCreateStatus] = useState<Status | null>(null)
@@ -52,9 +45,7 @@ export function KanbanBoard() {
     () =>
       COLUMNS.map((status) => ({
         status,
-        tasks: tasks
-          .filter((t) => t.status === status)
-          .sort((a, b) => a.position - b.position),
+        tasks: tasks.filter((t) => t.status === status),
       })),
     [tasks]
   )
@@ -82,42 +73,11 @@ export function KanbanBoard() {
       if (!task) return
 
       const overId = String(over.id)
-      const isOverColumn = COLUMNS.includes(overId as Status)
-
-      if (isOverColumn) {
+      if (COLUMNS.includes(overId as Status)) {
         const newStatus = overId as Status
-        if (newStatus === task.status) return
-        const columnTasks = tasks
-          .filter((t) => t.status === newStatus)
-          .sort((a, b) => a.position - b.position)
-        const newPos = columnTasks.length > 0 ? columnTasks[columnTasks.length - 1].position + 1000 : 1000
-        moveTask(taskId, newStatus, newPos)
-      } else {
-        const overTask = tasks.find((t) => t.id === overId)
-        if (!overTask) return
-        const newStatus = overTask.status
-        const columnTasks = tasks
-          .filter((t) => t.status === newStatus && t.id !== taskId)
-          .sort((a, b) => a.position - b.position)
-
-        const overIndex = columnTasks.findIndex((t) => t.id === overId)
-        let newPos: number
-        if (overIndex === -1) {
-          newPos = columnTasks.length > 0 ? columnTasks[columnTasks.length - 1].position + 1000 : 1000
-        } else {
-          const before = columnTasks[overIndex - 1]
-          const after = columnTasks[overIndex]
-          if (!before && after) {
-            newPos = after.position / 2
-          } else if (before && !after) {
-            newPos = before.position + 1000
-          } else if (before && after) {
-            newPos = (before.position + after.position) / 2
-          } else {
-            newPos = 1000
-          }
+        if (newStatus !== task.status) {
+          moveTask(taskId, newStatus)
         }
-        moveTask(taskId, newStatus, newPos)
       }
     },
     [tasks, moveTask, setActiveDragId]
@@ -131,12 +91,12 @@ export function KanbanBoard() {
   )
 
   const handleCreate = useCallback(
-    async (data: { title: string; priority: string; difficulty: string; estimatedMinutes: number }) => {
+    async (data: { task: string; priority: string; difficulty: string; estimated_minutes: number }) => {
       await createTask({
-        title: data.title,
+        task: data.task,
         priority: data.priority as any,
         difficulty: data.difficulty as any,
-        estimatedMinutes: data.estimatedMinutes,
+        estimated_minutes: data.estimated_minutes,
         status: createStatus ?? undefined,
       })
       setCreateStatus(null)
@@ -145,13 +105,13 @@ export function KanbanBoard() {
   )
 
   const handleUpdate = useCallback(
-    async (data: { title: string; priority: string; difficulty: string; estimatedMinutes: number }) => {
+    async (data: { task: string; priority: string; difficulty: string; estimated_minutes: number }) => {
       if (!editTask) return
       await updateTask(editTask.id, {
-        title: data.title,
+        task: data.task,
         priority: data.priority as any,
         difficulty: data.difficulty as any,
-        estimatedMinutes: data.estimatedMinutes,
+        estimated_minutes: data.estimated_minutes,
       })
       setEditTask(null)
     },

@@ -51,7 +51,7 @@ export const KanbanCard = memo(function KanbanCard({
       </button>
 
       <div className="min-w-0 flex-1" onClick={() => onEdit(task)}>
-        <p className="truncate font-medium text-zinc-100">{task.title}</p>
+        <p className="truncate font-medium text-zinc-100">{task.task}</p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <Badge
             variant="outline"
@@ -67,7 +67,7 @@ export const KanbanCard = memo(function KanbanCard({
           </Badge>
           <span className="inline-flex items-center gap-0.5 text-[10px] text-zinc-500">
             <Clock className="size-3" />
-            {task.estimatedMinutes}m
+            {task.estimated_minutes}m
           </span>
         </div>
       </div>

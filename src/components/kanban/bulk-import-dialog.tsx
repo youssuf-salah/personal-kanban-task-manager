@@ -29,20 +29,20 @@ export function BulkImportDialog({
     setError(null)
     try {
       const parsed = JSON.parse(jsonInput)
-      const tasks = Array.isArray(parsed) ? parsed : [parsed]
+      const items = Array.isArray(parsed) ? parsed : [parsed]
 
-      for (const t of tasks) {
-        if (!t.task || typeof t.task !== 'string') {
+      for (const item of items) {
+        if (!item.task || typeof item.task !== 'string') {
           setError('Each item must have a "task" field with a string value')
           return
         }
       }
 
-      const normalized = tasks.map((t: any) => ({
-        title: t.task,
-        priority: (t.priority || 'medium').toLowerCase(),
-        difficulty: (t.difficulty || 'medium').toLowerCase(),
-        estimatedMinutes: t.estimated_minutes || t.estimatedMinutes || 30,
+      const normalized = items.map((item: any) => ({
+        task: item.task,
+        priority: (item.priority || 'medium').toLowerCase(),
+        difficulty: (item.difficulty || 'medium').toLowerCase(),
+        estimated_minutes: item.estimated_minutes ?? 30,
       }))
 
       onImport(normalized)
