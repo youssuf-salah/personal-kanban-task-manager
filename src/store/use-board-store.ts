@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { toast } from 'sonner'
 import type { Task, CreateTaskInput, UpdateTaskInput, Status } from '@/types'
 
 interface BoardState {
@@ -13,7 +14,7 @@ interface BoardState {
   updateTask: (id: string, input: UpdateTaskInput) => Promise<void>
   deleteTask: (id: string) => Promise<void>
   moveTask: (id: string, status: Status) => Promise<void>
-  bulkImport: (inputs: CreateTaskInput[]) => Promise<void>
+  bulkImport: (inputs: CreateTaskInput[]) => Promise<{ created: number; failed: number }>
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -30,6 +31,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       set({ tasks, isLoading: false })
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false })
+      toast.error('Failed to load tasks')
     }
   },
 
@@ -42,6 +44,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (!res.ok) throw new Error('Failed to create')
     const task = await res.json()
     set((state) => ({ tasks: [...state.tasks, task] }))
+    toast.success('Task created')
   },
 
   updateTask: async (id, input) => {
@@ -55,14 +58,17 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
     }))
+    toast.success('Task updated')
   },
 
   deleteTask: async (id) => {
+    const task = get().tasks.find((t) => t.id === id)
     const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
     if (!res.ok) throw new Error('Failed to delete')
     set((state) => ({
       tasks: state.tasks.filter((t) => t.id !== id),
     }))
+    toast.success(`"${task?.task ?? 'Task'}" deleted`)
   },
 
   moveTask: async (id, status) => {
@@ -89,6 +95,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           t.id === id ? { ...t, status: oldStatus } : t
         ),
       }))
+      toast.error('Failed to move task')
     }
   },
 
@@ -104,6 +111,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       tasks: [...state.tasks, ...result.tasks],
       error: result.failed > 0 ? `${result.failed} task(s) failed validation` : null,
     }))
+    toast.success(`Imported ${result.created} task(s)`)
+    if (result.failed > 0) {
+      toast.error(`${result.failed} task(s) failed validation`)
+    }
     return result
   },
 }))
