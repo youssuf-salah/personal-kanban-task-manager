@@ -4,31 +4,36 @@ export type Status = 'backlog' | 'todo' | 'in_progress' | 'done'
 
 export interface Task {
   id: string
-  title: string
+  task: string
   priority: Priority
   difficulty: Difficulty
-  estimatedMinutes: number
+  estimated_minutes: number
   status: Status
-  position: number
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
 }
 
 export interface CreateTaskInput {
-  title: string
+  task: string
   priority?: Priority
   difficulty?: Difficulty
-  estimatedMinutes?: number
+  estimated_minutes?: number
   status?: Status
 }
 
 export interface UpdateTaskInput {
-  title?: string
+  task?: string
   priority?: Priority
   difficulty?: Difficulty
-  estimatedMinutes?: number
+  estimated_minutes?: number
   status?: Status
-  position?: number
+}
+
+export interface ImportTaskInput {
+  task: string
+  priority?: string
+  difficulty?: string
+  estimated_minutes?: number
 }
 
 export const STATUS_LABELS: Record<Status, string> = {

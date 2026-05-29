@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { getAllTasks, createTask, bulkCreateTasks } from '@/lib/db'
+import { getAllTasks, createTask, bulkCreateTasks, createTaskSchema, bulkImportSchema } from '@/lib/db'
+import { z } from 'zod'
 
 export async function GET() {
   try {
@@ -15,13 +16,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     if (Array.isArray(body)) {
-      const tasks = await bulkCreateTasks(body)
+      const parsed = bulkImportSchema.parse(body)
+      const tasks = await bulkCreateTasks(parsed)
       return Response.json(tasks, { status: 201 })
     }
 
-    const task = await createTask(body)
+    const parsed = createTaskSchema.parse(body)
+    const task = await createTask(parsed)
     return Response.json(task, { status: 201 })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+    }
     return Response.json({ error: 'Failed to create task' }, { status: 500 })
   }
 }

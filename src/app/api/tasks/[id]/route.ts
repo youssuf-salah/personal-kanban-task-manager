@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { updateTask, deleteTask } from '@/lib/db'
+import { updateTask, deleteTask, updateTaskSchema } from '@/lib/db'
+import { z } from 'zod'
 
 export async function PUT(
   request: NextRequest,
@@ -8,12 +9,16 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const task = await updateTask(id, body)
+    const parsed = updateTaskSchema.parse(body)
+    const task = await updateTask(id, parsed)
     if (!task) {
       return Response.json({ error: 'Task not found' }, { status: 404 })
     }
     return Response.json(task)
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+    }
     return Response.json({ error: 'Failed to update task' }, { status: 500 })
   }
 }
