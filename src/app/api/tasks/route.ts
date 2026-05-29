@@ -6,7 +6,8 @@ export async function GET() {
   try {
     const tasks = await getAllTasks()
     return Response.json(tasks)
-  } catch {
+  } catch (error) {
+    console.error('GET /api/tasks error:', error)
     return Response.json({ error: 'Failed to fetch tasks' }, { status: 500 })
   }
 }
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
     }
+    console.error('POST /api/tasks error:', error)
     return Response.json({ error: 'Failed to create task' }, { status: 500 })
   }
 }

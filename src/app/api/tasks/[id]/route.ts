@@ -19,6 +19,7 @@ export async function PATCH(
     if (error instanceof z.ZodError) {
       return Response.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
     }
+    console.error(`PATCH /api/tasks/${request.url.split('/').pop()} error:`, error)
     return Response.json({ error: 'Failed to update task' }, { status: 500 })
   }
 }
@@ -34,7 +35,8 @@ export async function DELETE(
       return Response.json({ error: 'Task not found' }, { status: 404 })
     }
     return Response.json({ success: true })
-  } catch {
+  } catch (error) {
+    console.error('DELETE /api/tasks error:', error)
     return Response.json({ error: 'Failed to delete task' }, { status: 500 })
   }
 }
