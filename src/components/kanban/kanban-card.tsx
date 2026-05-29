@@ -37,9 +37,8 @@ export const KanbanCard = memo(function KanbanCard({
   } = useSortable({ id: task.id, data: { type: 'task', task } })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: isDragging ? undefined : CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
     '--card-accent': PRIORITY_ACCENT[task.priority],
   }
 
@@ -47,10 +46,16 @@ export const KanbanCard = memo(function KanbanCard({
     <div
       ref={setNodeRef}
       style={style as React.CSSProperties}
-      className="card-accent group flex items-start gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 text-sm shadow-sm backdrop-blur-2xl transition-all hover:bg-white/[0.06] hover:shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)]"
+      className={`card-accent group flex items-start gap-3 rounded-lg border p-3 text-sm shadow-sm backdrop-blur-2xl transition-all ${
+        isDragging
+          ? 'border-white/[0.04] bg-white/[0.02] opacity-30'
+          : 'border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.06] hover:shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)]'
+      }`}
     >
       <button
-        className="mt-0.5 cursor-grab touch-none text-zinc-600 transition-colors hover:text-zinc-400"
+        className={`mt-0.5 touch-none transition-colors ${
+          isDragging ? 'cursor-grabbing text-zinc-500' : 'cursor-grab text-zinc-600 hover:text-zinc-400'
+        }`}
         {...attributes}
         {...listeners}
         aria-label="Drag to reorder"
