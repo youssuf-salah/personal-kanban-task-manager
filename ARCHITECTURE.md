@@ -5,35 +5,41 @@
 ```
 kanban-task-manager/
 ├── prisma/
-│   └── schema.prisma            # Database schema
-├── public/                       # Static assets
+│   ├── schema.prisma            # Database schema
+│   ├── seed.ts                  # Dev seed data
+│   └── prisma.config.ts         # Prisma 7 CLI config
 ├── src/
 │   ├── app/
-│   │   ├── api/
-│   │   │   └── tasks/
-│   │   │       ├── route.ts      # GET all, POST (single + bulk)
-│   │   │       └── [id]/
-│   │   │           └── route.ts  # PUT update, DELETE
-│   │   ├── globals.css           # Tailwind v4 + dark theme vars
-│   │   ├── layout.tsx            # Root layout
-│   │   └── page.tsx              # Main board page (client component)
+│   │   ├── api/tasks/
+│   │   │   ├── route.ts          # GET all, POST single
+│   │   │   ├── [id]/route.ts     # PATCH update, DELETE
+│   │   │   └── bulk-import/route.ts  # POST bulk
+│   │   ├── error.tsx             # Client error boundary
+│   │   ├── loading.tsx           # Skeleton loading state
+│   │   ├── globals.css           # Tailwind v4 + dark theme
+│   │   ├── layout.tsx            # Root layout (dark, Toaster)
+│   │   └── page.tsx              # Main board page
 │   ├── components/
 │   │   ├── ui/                   # shadcn/ui primitives
-│   │   ├── kanban-board.tsx      # Board container (DndContext)
-│   │   ├── kanban-column.tsx     # Single column (SortableContext)
-│   │   ├── kanban-card.tsx       # Task card (SortableItem)
-│   │   ├── task-dialog.tsx       # Create/edit task dialog
-│   │   └── bulk-import-dialog.tsx# Bulk JSON import dialog
+│   │   └── kanban/
+│   │       ├── kanban-board.tsx   # DndContext, search, sort, compact
+│   │       ├── kanban-column.tsx  # Droppable column, time totals
+│   │       ├── kanban-card.tsx    # Draggable card, compact variant
+│   │       ├── kanban-navbar.tsx  # Search, compact toggle, actions
+│   │       ├── task-dialog.tsx    # Create/edit form (key-remount)
+│   │       └── bulk-import-dialog.tsx  # Paste→preview flow
 │   ├── lib/
-│   │   ├── prisma.ts             # Prisma client singleton
-│   │   ├── db.ts                 # Database query functions
-│   │   └── utils.ts              # cn() helper, formatters
+│   │   ├── prisma.ts             # Lazy PrismaClient singleton
+│   │   ├── db.ts                 # Type-safe CRUD with Prisma enums
+│   │   ├── schemas.ts            # Shared Zod schemas
+│   │   └── utils.ts              # cn(), formatMinutes, sortByPriority, filterTasks
 │   ├── store/
-│   │   └── use-board-store.ts    # Zustand store
-│   └── types/
-│       └── index.ts              # Shared TypeScript types
-├── .env                          # DATABASE_URL
-├── .gitignore
+│   │   └── use-board-store.ts    # Zustand + toast notifications
+│   ├── types/
+│   │   └── index.ts              # Task, Priority, Difficulty, Status, constants
+│   └── generated/prisma/         # Prisma generated client (gitignored)
+├── .prettierrc
+├── eslint.config.mjs
 ├── next.config.ts
 ├── package.json
 ├── postcss.config.mjs
@@ -41,135 +47,97 @@ kanban-task-manager/
 └── ARCHITECTURE.md
 ```
 
-## 2. Tech Architecture
+## 2. Tech Stack
 
-**Full-stack Next.js App Router** — a single Next.js process serves both the API and the frontend. No separate backend.
-
-- **Database**: Local MySQL via Prisma ORM
-- **API**: Next.js Route Handlers (`src/app/api/tasks/`)
-- **Frontend**: Client Components (React Server Components are not useful here since the board is highly interactive)
-- **Styling**: Tailwind CSS v4 (CSS-based config, no JS config file)
-- **UI Components**: shadcn/ui (Radix primitives + Tailwind)
-- **Drag & Drop**: @dnd-kit (lightweight, React-first, accessible)
-- **Client State**: Zustand (minimal, no boilerplate)
+- **Next.js 16.2.6** (App Router, Turbopack)
+- **TypeScript** (strict mode)
+- **Tailwind CSS v4** (CSS-based config, no JS config)
+- **shadcn/ui** (dark theme, glassmorphism)
+- **Prisma 7.8.0** + MariaDB adapter (local MySQL)
+- **Zod** (shared validation — server route handlers + client dialogs)
+- **Zustand** (client state with selector subscriptions)
+- **@dnd-kit** (drag-and-drop: core, sortable, modifiers)
+- **sonner** (toast notifications)
+- **Lucide** (icons)
+- **ESLint** + **Prettier** (code quality)
 
 ## 3. Database Schema
 
-Single table — no relations needed for a single-user kanban.
+Single `Task` table — no relations.
 
 ```prisma
 model Task {
-  id               String   @id @default(cuid())
-  title            String
-  priority         Priority @default(MEDIUM)
+  id               String     @id @default(cuid())
+  task             String
+  priority         Priority   @default(MEDIUM)
   difficulty       Difficulty @default(MEDIUM)
-  estimatedMinutes Int      @default(30)
-  status           Status   @default(BACKLOG)
-  position         Float    // for ordering within a column
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  estimatedMinutes Int        @default(30) @map("estimated_minutes")
+  status           Status     @default(BACKLOG)
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([priority])
+  @@index([status, priority])
 }
-
-enum Priority { CRITICAL HIGH MEDIUM LOW }
-enum Difficulty { HARD MEDIUM EASY }
-enum Status { BACKLOG TODO IN_PROGRESS DONE }
 ```
 
-**Why `position` is a Float**: Allows inserting a card between two others by using the midpoint of their positions (e.g., position 3.5 between 3 and 4). Avoids re-indexing all siblings on every move.
+## 4. Key Design Decisions
 
-## 4. State Management
+| Decision | Rationale |
+|----------|-----------|
+| **No position field** | User spec: drag-and-drop updates only status |
+| **Lazy PrismaClient** | `getPrisma()` avoids build-time crash on missing DATABASE_URL |
+| **Shared Zod schemas** | `schemas.ts` imported by both server routes and client dialogs |
+| **Zustand selectors** | Individual field subscriptions prevent unnecessary re-renders |
+| **Column memo comparator** | Deep-equality on task content prevents stale renders |
+| **Card ghost during drag** | `transform: undefined` on ghost; DragOverlay shows lifted clone |
+| **Dialog key-remount** | `key={task?.id ?? 'new'}` avoids useEffect for form state reset |
+| **Type-safe Prisma enums** | `db.ts` uses `PrismaPriority`/`PrismaDifficulty`/`PrismaStatus` literal types |
+| **Two-step bulk import** | Paste → client-side safeParse preview → confirm; per-item validation |
 
-**Zustand** — single store for client-side board state.
-
-```
-Store:
-  tasks: Task[]                  // all tasks from server
-  isLoading: boolean
-  error: string | null
-
-  Actions:
-  fetchTasks()                   // GET /api/tasks → set tasks
-  createTask(data)               // POST /api/tasks → add to tasks
-  updateTask(id, data)           // PUT /api/tasks/[id] → update tasks
-  deleteTask(id)                 // DELETE /api/tasks/[id] → remove from tasks
-  moveTask(id, newStatus, newPos)// updateTask + reorder
-  bulkImport(tasks[])            // POST /api/tasks (array) → replace tasks
-```
-
-**Data flow**: Server is the source of truth. All mutations go through the API. On success, the store updates optimistically or from the server response.
-
-## 5. UI Layout Structure
+## 5. State Flow
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  [App Name]                     [+ New Task] [+ Import] │
-├──────────┬──────────┬──────────┬────────────────────────┤
-│ BACKLOG  │   TODO   │  IN PROG │   DONE                 │
-│ ┌──────┐ │ ┌──────┐ │ ┌──────┐ │ ┌──────┐              │
-│ │ Card │ │ │ Card │ │ │ Card │ │ │ Card │              │
-│ └──────┘ │ └──────┘ │ └──────┘ │ └──────┘              │
-│ ┌──────┐ │ ┌──────┐ │ ┌──────┐ │ ┌──────┐              │
-│ │ Card │ │ │ Card │ │ │ Card │ │ │ Card │              │
-│ └──────┘ │ └──────┘ │ └──────┘ │ └──────┘              │
-│          │          │          │                        │
-│ [+ Add]  │ [+ Add]  │ [+ Add]  │ [+ Add]               │
-└──────────┴──────────┴──────────┴────────────────────────┘
+User Action → Zustand Action → fetch() → Route Handler → Zod parse → Prisma → MySQL
+                                              ↓
+                                         Response JSON
+                                              ↓
+                                     Zustand set() → React re-render
+                                              ↓
+                                     toast.success() / toast.error()
 ```
 
-- Full viewport height, no scrolling on the page body
-- Each column scrolls independently when its cards overflow
-- Cards are compact: title, priority badge, difficulty badge, time estimate, delete button
-- Dialog overlay for create/edit with form fields
-- Drag handle or long-press to reorder
+Optimistic update for `moveTask`: status updated immediately in store, rolled back on API failure.
 
-## 6. Implementation Roadmap
+## 6. UI Features
 
-| Step | What | Why |
-|------|------|-----|
-| 1 | Prisma schema + client setup | Foundation |
-| 2 | TypeScript types | Shared contract |
-| 3 | API routes (CRUD) | Server operations |
-| 4 | Zustand store | Client state |
-| 5 | shadcn/ui primitives | UI building blocks |
-| 6 | KanbanBoard + column + card | Core UI |
-| 7 | Drag & drop with @dnd-kit | Interaction |
-| 8 | Task dialog (create/edit) | Data entry |
-| 9 | Bulk import dialog | Power feature |
-| 10 | Polish (theme, empty states, keyboard) | UX |
+- **4 columns**: Backlog, Todo, In Progress, Done
+- **Drag-and-drop**: PointerSensor (8px activation) + KeyboardSensor
+- **Search**: Filters by task, priority, difficulty (case-insensitive)
+- **Priority sorting**: Critical → High → Medium → Low within each column
+- **Time totals**: Column header shows total estimated minutes (e.g., "3h 30m")
+- **Compact mode**: Toggle for denser cards (single-char badges, less padding)
+- **Empty states**: Per-column contextual messages ("No tasks queued", etc.) + board-level "no matches" for search
+- **Toast notifications**: Success/error for create, update, delete, bulk import
+- **Error boundary**: `src/app/error.tsx` with reset button
+- **Loading skeleton**: Column skeleton placeholders in `loading.tsx`
 
-## 7. Dependency List
+## 7. Code Quality
 
-**Already installed:**
-- next, react, react-dom, typescript, tailwindcss, postcss
-- @tailwindcss/postcss, eslint-config-next
+- ESLint (Next.js core-web-vitals + TypeScript rules)
+- Prettier (`.prettierrc`: semicolons off, single quotes, trailing commas)
+- `npm run lint` — ESLint check
+- `npm run format` — Prettier write
+- `npm run format:check` — Prettier check
 
-**To install:**
-- `prisma` — ORM CLI
-- `@prisma/client` — ORM runtime
-- `@dnd-kit/core` — drag-and-drop primitives
-- `@dnd-kit/sortable` — sortable preset
-- `@dnd-kit/utilities` — utility functions
-- `zustand` — state management
-- `zod` — validation
-- `class-variance-authority` — shadcn dependency
-- `clsx` + `tailwind-merge` — cn() utility
-- `lucide-react` — icons
+## 8. Development Scripts
 
-**shadcn/ui components to add:**
-- button, dialog, input, textarea, select, badge, card
-
-## 8. Reasoning for Major Decisions
-
-**Why not server components?** The board is 100% interactive (drag-and-drop, real-time reordering). Client components are simpler and avoid RSC serialization overhead for this use case.
-
-**Why Zustand over Context/Redux?** Zustand has zero boilerplate, works outside React components (useful for the store), and doesn't cause unnecessary re-renders.
-
-**Why @dnd-kit over react-beautiful-dnd?** react-beautiful-dnd is unmaintained. @dnd-kit is actively maintained, tree-shakeable, accessible, and works with React 18/19.
-
-**Why Float position instead of integer order?** Midpoint insertion avoids re-indexing N siblings on every drag. Only when positions converge (gap < 0.001) do we normalize.
-
-**Why shadcn/ui?** It's not a component library — it's copy-paste components built on Radix primitives. Full control over styling, no dependency lock-in, tree-shakeable by nature.
-
-**Single table design:** A personal kanban has no users, no teams, no projects, no tags. A single `Task` table with an enum status column is the simplest correct design.
-
-**No Docker:** MySQL is running natively. Docker would add complexity with no benefit for a local-only project.
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Production server |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier write |
+| `npm run format:check` | Prettier check |
