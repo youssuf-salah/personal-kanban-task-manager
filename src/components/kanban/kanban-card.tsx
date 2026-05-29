@@ -9,6 +9,13 @@ import { PRIORITY_COLORS, DIFFICULTY_COLORS } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
+const PRIORITY_ACCENT: Record<string, string> = {
+  critical: '#ef4444',
+  high: '#f97316',
+  medium: '#3b82f6',
+  low: '#71717a',
+}
+
 interface KanbanCardProps {
   task: Task
   onEdit: (task: Task) => void
@@ -33,35 +40,36 @@ export const KanbanCard = memo(function KanbanCard({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    '--card-accent': PRIORITY_ACCENT[task.priority],
   }
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="group flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 p-3 text-sm shadow-sm transition-colors hover:border-zinc-700"
+      style={style as React.CSSProperties}
+      className="card-accent group flex items-start gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 text-sm shadow-sm backdrop-blur-2xl transition-all hover:bg-white/[0.06] hover:shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)]"
     >
       <button
-        className="mt-0.5 cursor-grab touch-none text-zinc-600 hover:text-zinc-300"
+        className="mt-0.5 cursor-grab touch-none text-zinc-600 transition-colors hover:text-zinc-400"
         {...attributes}
         {...listeners}
         aria-label="Drag to reorder"
       >
-        <GripVertical className="size-4" />
+        <GripVertical className="size-3.5" />
       </button>
 
-      <div className="min-w-0 flex-1" onClick={() => onEdit(task)}>
-        <p className="truncate font-medium text-zinc-100">{task.task}</p>
+      <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onEdit(task)}>
+        <p className="truncate text-sm font-medium text-zinc-100">{task.task}</p>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <Badge
             variant="outline"
-            className={`h-5 px-1.5 text-[10px] font-medium uppercase leading-none ${PRIORITY_COLORS[task.priority]}`}
+            className={`h-5 border px-1.5 text-[10px] font-medium uppercase leading-none ${PRIORITY_COLORS[task.priority]}`}
           >
             {task.priority}
           </Badge>
           <Badge
             variant="outline"
-            className={`h-5 px-1.5 text-[10px] font-medium uppercase leading-none ${DIFFICULTY_COLORS[task.difficulty]}`}
+            className={`h-5 border px-1.5 text-[10px] font-medium uppercase leading-none ${DIFFICULTY_COLORS[task.difficulty]}`}
           >
             {task.difficulty}
           </Badge>

@@ -55,7 +55,7 @@ export function BulkImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Bulk Import Tasks</DialogTitle>
           <DialogDescription>

@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Plus } from 'lucide-react'
+import { Plus, Inbox, CircleDot, Loader, CheckCircle2 } from 'lucide-react'
 import type { Task, Status } from '@/types'
 import { STATUS_LABELS } from '@/types'
 import { KanbanCard } from './kanban-card'
@@ -16,6 +16,13 @@ interface KanbanColumnProps {
   onAdd: (status: Status) => void
 }
 
+const STATUS_ICONS: Record<Status, typeof Inbox> = {
+  backlog: Inbox,
+  todo: CircleDot,
+  in_progress: Loader,
+  done: CheckCircle2,
+}
+
 export function KanbanColumn({
   status,
   tasks,
@@ -24,22 +31,28 @@ export function KanbanColumn({
   onAdd,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
+  const Icon = STATUS_ICONS[status]
 
   return (
     <div className="flex h-full w-72 shrink-0 flex-col">
       <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-          {STATUS_LABELS[status]}
-          <span className="ml-2 text-zinc-600">{tasks.length}</span>
-        </h2>
+        <div className="flex items-center gap-2">
+          <Icon className="size-3.5 text-zinc-500" />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            {STATUS_LABELS[status]}
+          </h2>
+        </div>
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/[0.06] px-1.5 text-[10px] font-medium text-zinc-500 tabular-nums">
+          {tasks.length}
+        </span>
       </div>
 
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-dashed p-2 transition-colors ${
+        className={`flex flex-1 flex-col gap-2 overflow-y-auto rounded-xl border p-2 transition-all scrollbar-thin ${
           isOver
-            ? 'border-indigo-500/50 bg-indigo-500/10'
-            : 'border-transparent bg-zinc-900/30'
+            ? 'border-blue-500/40 bg-blue-500/[0.04] shadow-[0_0_24px_-8px_rgba(59,130,246,0.15)]'
+            : 'border-white/[0.04] bg-white/[0.02]'
         }`}
       >
         <SortableContext

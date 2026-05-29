@@ -11,15 +11,14 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { Plus, Upload } from 'lucide-react'
 import { useBoardStore } from '@/store/use-board-store'
 import type { Task, Status } from '@/types'
 import { COLUMNS } from '@/types'
 import { KanbanColumn } from './kanban-column'
 import { KanbanCard } from './kanban-card'
+import { KanbanNavbar } from './kanban-navbar'
 import { TaskDialog } from './task-dialog'
 import { BulkImportDialog } from './bulk-import-dialog'
-import { Button } from '@/components/ui/button'
 
 export function KanbanBoard() {
   const { tasks, isLoading, fetchTasks, createTask, updateTask, deleteTask, moveTask } =
@@ -121,7 +120,10 @@ export function KanbanBoard() {
   if (isLoading && tasks.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-sm text-zinc-500">Loading...</p>
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <div className="size-1.5 animate-pulse rounded-full bg-zinc-500" />
+          Loading...
+        </div>
       </div>
     )
   }
@@ -129,36 +131,18 @@ export function KanbanBoard() {
   return (
     <>
       <div className="flex h-full flex-col">
-        <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-3">
-          <h1 className="text-lg font-bold text-zinc-100">Task Board</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setBulkOpen(true)}
-              className="gap-1.5 text-xs"
-            >
-              <Upload className="size-3.5" />
-              Import JSON
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setCreateStatus('backlog')}
-              className="gap-1.5 text-xs"
-            >
-              <Plus className="size-3.5" />
-              New Task
-            </Button>
-          </div>
-        </header>
+        <KanbanNavbar
+          onNewTask={() => setCreateStatus('backlog')}
+          onImport={() => setBulkOpen(true)}
+        />
 
-        <div className="flex-1 overflow-x-auto p-6">
+        <div className="flex-1 overflow-x-auto p-6 pt-4 scrollbar-thin">
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex h-full gap-4">
+            <div className="flex h-full gap-5">
               {columns.map(({ status, tasks: columnTasks }) => (
                 <KanbanColumn
                   key={status}
@@ -173,7 +157,7 @@ export function KanbanBoard() {
 
             <DragOverlay modifiers={[restrictToWindowEdges]}>
               {activeTask ? (
-                <div className="w-72 opacity-90">
+                <div className="w-72 rotate-3 opacity-90">
                   <KanbanCard
                     task={activeTask}
                     onEdit={() => {}}
