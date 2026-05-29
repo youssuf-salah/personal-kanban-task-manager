@@ -24,8 +24,13 @@ import { TaskDialog } from './task-dialog'
 import { BulkImportDialog } from './bulk-import-dialog'
 
 export function KanbanBoard() {
-  const { tasks, isLoading, fetchTasks, createTask, updateTask, deleteTask, moveTask } =
-    useBoardStore()
+  const tasks = useBoardStore((s) => s.tasks)
+  const isLoading = useBoardStore((s) => s.isLoading)
+  const fetchTasks = useBoardStore((s) => s.fetchTasks)
+  const createTask = useBoardStore((s) => s.createTask)
+  const updateTask = useBoardStore((s) => s.updateTask)
+  const deleteTask = useBoardStore((s) => s.deleteTask)
+  const moveTask = useBoardStore((s) => s.moveTask)
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
