@@ -22,10 +22,10 @@ function toTask(row: Record<string, unknown>): Task {
     task: row.task as string,
     priority: (row.priority as string).toLowerCase() as Task["priority"],
     difficulty: (row.difficulty as string).toLowerCase() as Task["difficulty"],
-    estimated_minutes: row.estimated_minutes as number,
+    estimated_minutes: (row.estimatedMinutes ?? row.estimated_minutes) as number,
     status: (row.status as string).toLowerCase() as Status,
-    created_at: (row.created_at as Date).toISOString(),
-    updated_at: (row.updated_at as Date).toISOString(),
+    created_at: ((row.createdAt ?? row.created_at) as Date).toISOString(),
+    updated_at: ((row.updatedAt ?? row.updated_at) as Date).toISOString(),
   }
 }
 
