@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Difficulty {
+  HARD
+  MEDIUM
+  EASY
+}
+
+enum Status {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+model Task {
+  id               String     @id @default(cuid())
+  title            String
+  priority         Priority   @default(MEDIUM)
+  difficulty       Difficulty @default(MEDIUM)
+  estimatedMinutes Int        @default(30)
+  status           Status     @default(BACKLOG)
+  position         Float
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
