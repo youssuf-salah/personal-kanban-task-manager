@@ -14,6 +14,10 @@ export async function getPrisma() {
   const { PrismaClient: PC } = await import("@/generated/prisma/client")
 
   const u = new URL(url)
+
+  const start = Date.now()
+  console.log("[prisma] connecting to database at", u.hostname)
+
   const adapter = new PrismaMariaDb({
     host: u.hostname,
     port: Number(u.port) || 3306,
@@ -21,8 +25,12 @@ export async function getPrisma() {
     password: decodeURIComponent(u.password),
     database: decodeURIComponent(u.pathname.slice(1)),
     connectionLimit: 5,
+    connectTimeout: 10000,
+    ssl: { rejectUnauthorized: false },
+    allowPublicKeyRetrieval: true,
   })
 
   prisma = new PC({ adapter })
+  console.log("[prisma] connected in", Date.now() - start, "ms")
   return prisma
 }
