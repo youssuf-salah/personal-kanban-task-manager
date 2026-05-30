@@ -213,7 +213,7 @@ export function KanbanBoard() {
               onDragEnd={handleDragEnd}
               onDragCancel={handleDragCancel}
             >
-              <div className="grid h-full grid-cols-2 gap-5 2xl:grid-cols-4">
+              <div className="grid h-full grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
                 {columns.map(({ status, tasks: columnTasks }) => (
                   <KanbanColumn
                     key={status}

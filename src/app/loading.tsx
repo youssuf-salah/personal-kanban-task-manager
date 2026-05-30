@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="grid h-full grid-cols-2 gap-5 p-6 2xl:grid-cols-4">
+    <div className="grid h-full grid-cols-1 gap-5 p-6 md:grid-cols-2 2xl:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex h-full min-h-0 flex-col gap-3">
           <div className="flex items-center gap-2">
