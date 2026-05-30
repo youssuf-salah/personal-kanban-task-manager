@@ -145,10 +145,10 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        key={String(open)}
         className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-2xl"
         onKeyDown={handleKeyDown}
       >
+        <div key={String(open)}>
         <DialogHeader>
           <DialogTitle>Bulk Import Tasks</DialogTitle>
           {step === 'paste' && (
@@ -294,6 +294,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
             </div>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   )
