@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { toast } from 'sonner'
-import type { Task, CreateTaskInput, UpdateTaskInput, Status } from '@/types'
+import type { Task, CreateTaskInput, UpdateTaskInput, Status, Priority } from '@/types'
 
 interface BoardState {
   tasks: Task[]
@@ -13,7 +13,7 @@ interface BoardState {
   createTask: (input: CreateTaskInput) => Promise<void>
   updateTask: (id: string, input: UpdateTaskInput) => Promise<void>
   deleteTask: (id: string) => Promise<void>
-  moveTask: (id: string, status: Status) => Promise<void>
+  moveTask: (id: string, status: Status, priority?: Priority) => Promise<void>
   bulkImport: (inputs: CreateTaskInput[]) => Promise<{ created: number; failed: number }>
 }
 
@@ -81,28 +81,33 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     toast.success(`"${task?.task ?? 'Task'}" deleted`)
   },
 
-  moveTask: async (id, status) => {
+  moveTask: async (id, status, priority) => {
     const { tasks } = get()
     const task = tasks.find((t) => t.id === id)
     if (!task) return
 
     const oldStatus = task.status
+    const oldPriority = task.priority
+
+    const patch: Record<string, unknown> = { status }
+    if (priority !== undefined) patch.priority = priority
+
     set((state) => ({
       tasks: state.tasks.map((t) =>
-        t.id === id ? { ...t, status } : t
+        t.id === id ? { ...t, ...patch } : t
       ),
     }))
 
     const res = await fetch(`/api/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(patch),
     })
 
     if (!res.ok) {
       set((state) => ({
         tasks: state.tasks.map((t) =>
-          t.id === id ? { ...t, status: oldStatus } : t
+          t.id === id ? { ...t, status: oldStatus, priority: oldPriority } : t
         ),
       }))
       const msg = await getErrorMessage(res)
