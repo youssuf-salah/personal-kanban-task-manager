@@ -2,13 +2,12 @@
 
 import { memo, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus, Inbox, CircleDot, Loader, CheckCircle2, Clock } from 'lucide-react'
-import type { Task, Status } from '@/types'
+import type { Task, Status, Priority } from '@/types'
 import { STATUS_LABELS } from '@/types'
-import { KanbanCard } from './kanban-card'
 import { Button } from '@/components/ui/button'
 import { formatMinutes, totalMinutes } from '@/lib/utils'
+import { PriorityFolder } from './priority-folder'
 
 interface KanbanColumnProps {
   status: Status
@@ -73,13 +72,6 @@ const COLUMN_THEME: Record<Status, {
   },
 }
 
-const EMPTY_ICONS: Record<Status, typeof Inbox> = {
-  backlog: Inbox,
-  todo: CircleDot,
-  in_progress: Loader,
-  done: CheckCircle2,
-}
-
 export const KanbanColumn = memo(function KanbanColumn({
   status,
   tasks,
@@ -91,9 +83,18 @@ export const KanbanColumn = memo(function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const Icon = STATUS_ICONS[status]
   const theme = COLUMN_THEME[status]
-  const EmptyIcon = EMPTY_ICONS[status]
 
-  const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks])
+  const priorities: Priority[] = ['critical', 'high', 'medium', 'low']
+
+  const grouped = useMemo(() => {
+    const groups: Record<Priority, Task[]> = {
+      critical: [], high: [], medium: [], low: [],
+    }
+    for (const t of tasks) {
+      if (groups[t.priority]) groups[t.priority].push(t)
+    }
+    return groups
+  }, [tasks])
 
   const totalEstimate = useMemo(
     () => formatMinutes(totalMinutes(tasks.map((t) => t.estimated_minutes))),
@@ -131,27 +132,17 @@ export const KanbanColumn = memo(function KanbanColumn({
             : 'border-white/[0.04] bg-white/[0.02]'
         }`}
       >
-        <SortableContext
-          items={itemIds}
-          strategy={verticalListSortingStrategy}
-        >
-          {tasks.map((task) => (
-            <KanbanCard
-              key={task.id}
-              task={task}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              compact={compact}
-            />
-          ))}
-        </SortableContext>
-
-        {tasks.length === 0 && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4">
-            <EmptyIcon className={`size-5 ${theme.icon} opacity-40`} />
-            <p className="text-xs text-zinc-500">No tasks</p>
-          </div>
-        )}
+        {priorities.map((priority) => (
+          <PriorityFolder
+            key={priority}
+            status={status}
+            priority={priority}
+            tasks={grouped[priority]}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            compact={compact}
+          />
+        ))}
       </div>
 
       {status !== 'done' && (
