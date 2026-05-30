@@ -93,10 +93,34 @@ export function KanbanBoard() {
       if (!task) return
 
       const overId = String(over.id)
+
+      // "status:priority" — dropped on a priority folder
+      if (overId.includes(':')) {
+        const [targetStatus, targetPriority] = overId.split(':') as [Status, Priority]
+        const newStatus = targetStatus
+        const newPriority = targetPriority
+        if (newStatus !== task.status || newPriority !== task.priority) {
+          moveTask(taskId, newStatus, newPriority)
+        }
+        return
+      }
+
+      // Plain column id — dropped on column area (between folders)
       if (COLUMNS.includes(overId as Status)) {
         const newStatus = overId as Status
         if (newStatus !== task.status) {
           moveTask(taskId, newStatus)
+        }
+        return
+      }
+
+      // Task id — dropped on another task
+      const targetTask = tasks.find((t) => t.id === overId)
+      if (targetTask) {
+        const newStatus = targetTask.status
+        const newPriority = targetTask.priority
+        if (newStatus !== task.status || newPriority !== task.priority) {
+          moveTask(taskId, newStatus, newPriority)
         }
       }
     },
