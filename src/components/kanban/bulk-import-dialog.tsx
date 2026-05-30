@@ -145,11 +145,11 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="border-white/[0.06] bg-black/60 backdrop-blur-2xl sm:max-w-2xl"
+        className="border-white/6 bg-black/60 backdrop-blur-2xl sm:max-w-2xl"
         onKeyDown={handleKeyDown}
       >
-        <div key={String(open)}>
-        <DialogHeader>
+        <div key={String(open)} className="flex flex-col max-h-[80vh] overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Bulk Import Tasks</DialogTitle>
           {step === 'paste' && (
             <DialogDescription>
@@ -166,7 +166,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
         </DialogHeader>
 
         {step === 'paste' && (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4 overflow-hidden min-h-0">
             <Textarea
               value={jsonInput}
               onChange={(e) => {
@@ -174,7 +174,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
                 if (parseError) setParseError(null)
               }}
               placeholder='[{ "task": "Learn vector embeddings", "priority": "high", "difficulty": "medium", "estimated_minutes": 90 }]'
-              className="min-h-[240px] font-mono text-xs"
+              className="min-h-50 max-h-75 w-full font-mono text-xs resize-none overflow-y-auto"
               spellCheck={false}
               autoFocus
             />
@@ -186,7 +186,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 shrink-0">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
@@ -198,8 +198,8 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
         )}
 
         {step === 'preview' && results && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-2 text-xs">
+          <div className="flex flex-col gap-4 flex-1 overflow-hidden min-h-0">
+            <div className="flex items-center gap-3 rounded-lg border border-white/4 bg-white/2 px-3 py-2 text-xs shrink-0">
               <span className="flex items-center gap-1 text-green-400">
                 <CheckCircle2 className="size-3.5" />
                 {validCount} valid
@@ -212,14 +212,14 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
               )}
             </div>
 
-            <div className="max-h-[300px] space-y-1 overflow-y-auto scrollbar-thin">
+            <div className="flex-1 overflow-y-auto scrollbar-thin space-y-1 min-h-0">
               {results.map((item) => (
                 <div
                   key={item.index}
                   className={`flex items-start gap-2.5 rounded-lg border p-2.5 text-sm ${
                     item.valid
-                      ? 'border-white/[0.04] bg-white/[0.02]'
-                      : 'border-red-500/15 bg-red-500/[0.03]'
+                      ? 'border-white/4 bg-white/2'
+                      : 'border-red-500/15 bg-red-500/3'
                   }`}
                 >
                   {item.valid ? (
@@ -229,7 +229,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
                   )}
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-zinc-100">
+                    <p className="wrap-break-words text-sm font-medium text-zinc-100">
                       {item.valid ? item.data.task : item.title}
                     </p>
 
@@ -267,7 +267,7 @@ export function BulkImportDialog({ open, onOpenChange }: BulkImportDialogProps) 
               ))}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
               <p className="text-[11px] text-zinc-500">
                 Invalid items will be skipped during import.
               </p>
