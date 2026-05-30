@@ -2,7 +2,7 @@
 
 A local-first Kanban board for tracking AI engineering learning tasks. Built with Next.js, designed to run on your own machine with no cloud dependencies, accounts, or subscriptions.
 
-![Screenshot placeholder](./public/screenshot.png)
+![Demo Screenshot](./public/screenshot.png)
 
 ---
 
@@ -23,30 +23,34 @@ A local-first Kanban board for tracking AI engineering learning tasks. Built wit
 
 ## Screenshots
 
-*(Add screenshots here)*
+### Full board
 
-| View | Preview |
-|------|---------|
-| Full board | ![](./public/screenshots/board.png) |
-| Task dialog | ![](./public/screenshots/dialog.png) |
-| Bulk import | ![](./public/screenshots/bulk-import.png) |
+![Full board screenshot](./public/screenshots/board.png)
+
+### Task dialog
+
+![Task dialog screenshot](./public/screenshots/dialog.png)
+
+### Bulk import
+
+![Bulk import screenshot](./public/screenshots/bulk-import.png)
 
 ---
 
 ## Tech Stack
 
-| Technology | What it does |
-|------------|-------------|
-| **Next.js** | The web framework that runs the app and serves pages |
-| **TypeScript** | Adds type safety to JavaScript (catches mistakes before running) |
-| **Tailwind CSS** | A utility CSS framework for styling (no separate CSS files to manage) |
-| **Prisma** | Talks to the database — lets the app read/write tasks using JavaScript code |
-| **MySQL** | The database where all your tasks are stored |
-| **shadcn/ui** | A collection of pre-built UI components (buttons, dialogs, inputs, etc.) |
-| **Zustand** | Manages the app's state (which tasks are loaded, which column they're in) |
-| **@dnd-kit** | Handles the drag-and-drop interactions |
-| **Zod** | Validates data before saving it to the database |
-| **Sonner** | Shows toast notifications (the small pop-up messages) |
+| Technology       | What it does                                                                |
+| ---------------- | --------------------------------------------------------------------------- |
+| **Next.js**      | The web framework that runs the app and serves pages                        |
+| **TypeScript**   | Adds type safety to JavaScript (catches mistakes before running)            |
+| **Tailwind CSS** | A utility CSS framework for styling (no separate CSS files to manage)       |
+| **Prisma**       | Talks to the database — lets the app read/write tasks using JavaScript code |
+| **MySQL**        | The database where all your tasks are stored                                |
+| **shadcn/ui**    | A collection of pre-built UI components (buttons, dialogs, inputs, etc.)    |
+| **Zustand**      | Manages the app's state (which tasks are loaded, which column they're in)   |
+| **@dnd-kit**     | Handles the drag-and-drop interactions                                      |
+| **Zod**          | Validates data before saving it to the database                             |
+| **Sonner**       | Shows toast notifications (the small pop-up messages)                       |
 
 ---
 
@@ -367,15 +371,15 @@ kanban-task-manager/
 
 ## Available Commands
 
-| Command | What it does |
-|---------|-------------|
-| `npm run dev` | Start the development server (http://localhost:3000) |
-| `npm run build` | Build the app for production |
-| `npm run start` | Start the production server (after `npm run build`) |
-| `npm run lint` | Check for code quality issues |
-| `npm run format` | Auto-format your code |
-| `npm run db:generate` | Generate the Prisma client after schema changes |
-| `npm run db:seed` | Fill the database with sample tasks |
+| Command               | What it does                                         |
+| --------------------- | ---------------------------------------------------- |
+| `npm run dev`         | Start the development server (http://localhost:3000) |
+| `npm run build`       | Build the app for production                         |
+| `npm run start`       | Start the production server (after `npm run build`)  |
+| `npm run lint`        | Check for code quality issues                        |
+| `npm run format`      | Auto-format your code                                |
+| `npm run db:generate` | Generate the Prisma client after schema changes      |
+| `npm run db:seed`     | Fill the database with sample tasks                  |
 
 ---
 
@@ -386,6 +390,7 @@ kanban-task-manager/
 **Cause:** MySQL is not running.
 
 **Fix:**
+
 - **Windows:** Open Services (search for "Services" in Start), find "MySQL" or "MySQL80", right-click and select **Start**
 - **Mac:** Run `brew services start mysql` in Terminal
 - **Linux:** Run `sudo systemctl start mysql`
@@ -395,6 +400,7 @@ kanban-task-manager/
 **Cause:** Wrong password or the database doesn't exist yet.
 
 **Fix:**
+
 1. Double-check your password in `.env`
 2. Make sure you ran the SQL migration (Step 2 above) to create the database
 3. Verify MySQL is running (see above)
@@ -410,6 +416,7 @@ kanban-task-manager/
 **Cause:** Another MySQL instance is running, or something else is using port 3306.
 
 **Fix:**
+
 1. Run `netstat -ano | findstr :3306` to see what's using the port
 2. Stop the conflicting service, or change MySQL's port in the MySQL configuration
 
@@ -418,6 +425,7 @@ kanban-task-manager/
 **Cause:** Network issues or missing build tools.
 
 **Fix:**
+
 1. Run `npm cache clean --force` and try again
 2. Make sure you have an internet connection
 3. If you're behind a corporate proxy, configure npm: `npm config set proxy http://proxy:port`
@@ -439,6 +447,7 @@ kanban-task-manager/
 **Cause:** The database connection failed silently, or a build error occurred.
 
 **Fix:**
+
 1. Check the terminal where `npm run dev` is running for error messages
 2. Make sure MySQL is running and the database exists
 3. Verify your `.env` file is correct
@@ -448,6 +457,7 @@ kanban-task-manager/
 **Cause:** A browser refresh might be needed, or there was a database error.
 
 **Fix:**
+
 1. Refresh the page (F5 or Cmd+R)
 2. Check the terminal for error messages
 3. Open your browser's developer console (F12) and look for red error messages
